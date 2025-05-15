@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: daf0ee1d095284b47bab11b21a5d66d2, type: 3}
+  m_Name: Cylinder
+  m_EditorClassIdentifier: 
+  itemName: Cylinder
+  prefab: {fileID: 4375205178325896523, guid: 0f5f5b6394a8ea245a53edb0009e4cb4, type: 3}
+  icon: {fileID: 21300000, guid: c390b161a52a965459291afd16daa24a, type: 3}
+  category: Primitives
+  isPaid: 0
+  maxSpawnCount: 5
+  currentSpawnCount: 5

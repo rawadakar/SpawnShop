@@ -1,0 +1,10 @@
+﻿.vs
+Temp
+Packages/packages-lock.json
+obj
+Logs
+Library
+Assembly-CSharp.csproj
+*.vsconfig
+*.csproj
+SpawnShop.sln
