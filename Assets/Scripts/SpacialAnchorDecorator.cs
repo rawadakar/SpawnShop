@@ -31,10 +31,22 @@ public class SpatialAnchorDecorator : MonoBehaviour
 
     public async void PlaceDecoration(GameObject prefab, Vector3 position, Quaternion rotation)
     {
-        GameObject instance = Instantiate(prefab, position, rotation);
-        instance.name = prefab.name; // ✅ Prevent (Clone)
-        var anchor = instance.AddComponent<OVRSpatialAnchor>();
+        // 1. Create a unique anchor GameObject
+        string anchorName = $"Anchor_{prefab.name}_{Guid.NewGuid().ToString().Substring(0, 8)}";
+        GameObject anchorGO = new GameObject(anchorName);
+        anchorGO.transform.position = position;
+        anchorGO.transform.rotation = rotation;
 
+        // 2. Add the spatial anchor
+        var anchor = anchorGO.AddComponent<OVRSpatialAnchor>();
+
+        // 3. Instantiate the decoration under the anchor
+        GameObject instance = Instantiate(prefab, anchorGO.transform);
+        instance.name = prefab.name;
+        instance.transform.localPosition = Vector3.zero;
+        instance.transform.localRotation = Quaternion.identity;
+
+        // 4. Wait for localization
         float timeout = 5f;
         float elapsed = 0f;
         while (!anchor.Localized && elapsed < timeout)
@@ -45,47 +57,34 @@ public class SpatialAnchorDecorator : MonoBehaviour
 
         if (!anchor.Localized)
         {
-            
-            Destroy(instance);
+            Destroy(anchorGO);
             return;
         }
 
+        // 5. Save the anchor
         bool success = await anchor.SaveAnchorAsync();
 
         if (success && anchor.Uuid != Guid.Empty)
         {
-            
-
-            var info = instance.AddComponent<RoomDecorationInfo>();
+            var info = anchorGO.AddComponent<RoomDecorationInfo>();
             info.uuid = anchor.Uuid.ToString();
-            info.linkedObject = instance;
-            info.prefabName = prefab.name; // ✅ 👈 Write this here
+            info.linkedObject = anchorGO;
+            info.prefabName = prefab.name;
+
             RoomMenuManager.Instance.RegisterDecoration(info);
 
-            // Optionally also save the decoration to PlayerPrefs
             SaveNewDecoration(info.uuid, info.prefabName);
         }
         else
         {
-            
-            Destroy(instance);
+            Destroy(anchorGO);
         }
-    }
-
-    private void SaveDecoration(string uuid, string prefabName)
-    {
-        Wrapper wrapper = PlayerPrefs.HasKey(SaveKey)
-            ? JsonUtility.FromJson<Wrapper>(PlayerPrefs.GetString(SaveKey))
-            : new Wrapper();
-
-        wrapper.items.Add(new DecorationData { uuid = uuid, prefabName = prefabName });
-
-        PlayerPrefs.SetString(SaveKey, JsonUtility.ToJson(wrapper));
-        PlayerPrefs.Save();
     }
 
     private async void LoadDecorations()
     {
+        RoomMenuManager.Instance.ClearDecorations();
+
         if (!PlayerPrefs.HasKey(SaveKey)) return;
 
         var wrapper = JsonUtility.FromJson<Wrapper>(PlayerPrefs.GetString(SaveKey));
@@ -99,10 +98,6 @@ public class SpatialAnchorDecorator : MonoBehaviour
                 guids.Add(id);
                 prefabLookup[id] = deco.prefabName;
             }
-            else
-            {
-                
-            }
         }
 
         List<OVRSpatialAnchor.UnboundAnchor> buffer = new();
@@ -111,22 +106,18 @@ public class SpatialAnchorDecorator : MonoBehaviour
         foreach (var unbound in buffer)
         {
             if (!prefabLookup.TryGetValue(unbound.Uuid, out string prefabName))
-            {
-                
                 continue;
-            }
 
             GameObject prefab = allPrefabs.Find(p => p.name == prefabName);
             if (prefab == null)
-            {
-                
                 continue;
-            }
 
-            GameObject instance = Instantiate(prefab);
-            var anchor = instance.AddComponent<OVRSpatialAnchor>();
+            // 1. Create the anchor GameObject
+            GameObject anchorGO = new GameObject($"Anchor_{prefabName}_{Guid.NewGuid().ToString().Substring(0, 8)}");
+            var anchor = anchorGO.AddComponent<OVRSpatialAnchor>();
             unbound.BindTo(anchor);
 
+            // 2. Instantiate the prefab as a child
             float timeout = 5f;
             float elapsed = 0f;
             while (!anchor.Localized && elapsed < timeout)
@@ -137,18 +128,43 @@ public class SpatialAnchorDecorator : MonoBehaviour
 
             if (anchor.Localized)
             {
-                var info = instance.AddComponent<RoomDecorationInfo>();
-                info.uuid = anchor.Uuid.ToString();
-                info.linkedObject = instance;
-                RoomMenuManager.Instance.RegisterDecoration(info);
+                // ✅ Instantiate decoration only after the anchor has localized
+                GameObject instance = Instantiate(prefab, anchorGO.transform);
+                instance.name = prefab.name;
+                instance.transform.localPosition = Vector3.zero;
+                instance.transform.localRotation = Quaternion.identity;
 
-                // Optional: Update spawn count logic here if needed
-                // SpawnLimiter.RegisterSpawn(prefabName);
+                var info = anchorGO.AddComponent<RoomDecorationInfo>();
+                info.uuid = anchor.Uuid.ToString();
+                info.linkedObject = anchorGO;
+                info.prefabName = prefab.name;
+
+                RoomMenuManager.Instance.RegisterDecoration(info);
             }
             else
             {
-                
-                Destroy(instance);
+                Destroy(anchorGO);
+            }
+
+            
+            while (!anchor.Localized && elapsed < timeout)
+            {
+                await Task.Yield();
+                elapsed += Time.deltaTime;
+            }
+
+            if (anchor.Localized)
+            {
+                var info = anchorGO.AddComponent<RoomDecorationInfo>();
+                info.uuid = anchor.Uuid.ToString();
+                info.linkedObject = anchorGO;
+                info.prefabName = prefab.name;
+
+                RoomMenuManager.Instance.RegisterDecoration(info);
+            }
+            else
+            {
+                Destroy(anchorGO);
             }
         }
     }
@@ -162,8 +178,6 @@ public class SpatialAnchorDecorator : MonoBehaviour
 
         PlayerPrefs.SetString(SaveKey, JsonUtility.ToJson(wrapper));
         PlayerPrefs.Save();
-
-        
     }
 
     public static void SaveNewDecoration(string uuid, string prefabName)
@@ -172,6 +186,8 @@ public class SpatialAnchorDecorator : MonoBehaviour
             ? JsonUtility.FromJson<Wrapper>(PlayerPrefs.GetString(SaveKey))
             : new Wrapper();
 
+        // Replace only if UUID exists, allowing multiple of the same prefab
+        wrapper.items.RemoveAll(d => d.uuid == uuid);
         wrapper.items.Add(new DecorationData { uuid = uuid, prefabName = prefabName });
 
         PlayerPrefs.SetString(SaveKey, JsonUtility.ToJson(wrapper));

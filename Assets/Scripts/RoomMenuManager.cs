@@ -17,7 +17,11 @@ public class RoomMenuManager : MonoBehaviour
 
     public void RegisterDecoration(RoomDecorationInfo info)
     {
-        activeDecorations.Add(info);
+        // Avoid duplicate entries by UUID or reference
+        if (!activeDecorations.Exists(x => x.uuid == info.uuid || x.linkedObject == info.linkedObject))
+        {
+            activeDecorations.Add(info);
+        }
     }
 
     void CreateButton(RoomDecorationInfo info)
@@ -69,5 +73,18 @@ public class RoomMenuManager : MonoBehaviour
     public List<RoomDecorationInfo> GetActiveDecorations()
     {
         return activeDecorations;
+    }
+
+    public void UnregisterDecoration(RoomDecorationInfo info)
+    {
+        if (activeDecorations.Contains(info))
+        {
+            activeDecorations.Remove(info);
+        }
+    }
+
+    public void ClearDecorations()
+    {
+        activeDecorations.Clear();
     }
 }

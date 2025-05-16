@@ -7,43 +7,15 @@ using Oculus.Interaction;
 public class AnchorReplacer : MonoBehaviour
 {
     private DistanceGrabInteractable interactable;
-    private OVRSpatialAnchor currentAnchor;
-
     private const float AnchorTimeout = 5f;
-    private string savedKey => $"anchor_{gameObject.name}_uuid";
-
     private bool wasBeingGrabbed = false;
+
+    private string prefabName => gameObject.name;
 
     private void Awake()
     {
         interactable = GetComponentInChildren<DistanceGrabInteractable>();
-        if (interactable == null)
-        {
-            
-        }
     }
-
-    private async void Start()
-    {
-        // Wait for OVRSpatialAnchor to be added by another script or system
-        float elapsed = 0f;
-        while (currentAnchor == null && elapsed < 1f)
-        {
-            currentAnchor = GetComponent<OVRSpatialAnchor>();
-            await Task.Yield();
-            elapsed += Time.deltaTime;
-        }
-
-        if (currentAnchor != null)
-        {
-            
-        }
-        else
-        {
-            
-        }
-    }
-
 
     private void Update()
     {
@@ -69,59 +41,82 @@ public class AnchorReplacer : MonoBehaviour
 
     private void OnGrabStart()
     {
-        if (currentAnchor != null)
+        Transform parent = transform.parent;
+        if (parent == null) return;
+
+        GameObject anchorGO = parent.gameObject;
+
+        // ✅ Get info before destroying
+        RoomDecorationInfo info = anchorGO.GetComponent<RoomDecorationInfo>();
+        if (info != null)
         {
-            Destroy(currentAnchor);
-            currentAnchor = null;
-            
+            if (!string.IsNullOrEmpty(info.uuid))
+            {
+                // ✅ Remove from saved JSON
+                SpatialAnchorDecorator.RemoveSavedDecoration(info.uuid);
+            }
+
+            // ✅ Optionally unregister from RoomMenuManager
+            RoomMenuManager.Instance.UnregisterDecoration(info);
         }
+
+        // ✅ Unparent and destroy
+        transform.SetParent(null, true);
+        Destroy(anchorGO);
     }
+
 
     private async void OnGrabReleased()
     {
-        await Task.Yield(); // wait a frame to finalize position
+        await Task.Yield(); // Wait one frame to settle transform
 
-        currentAnchor = gameObject.AddComponent<OVRSpatialAnchor>();
+        // 1. Create new anchor GameObject
+        string anchorName = $"Anchor_{prefabName}_{Guid.NewGuid().ToString().Substring(0, 8)}";
+        GameObject anchorGO = new GameObject(anchorName);
+        anchorGO.transform.position = transform.position;
+        anchorGO.transform.rotation = transform.rotation;
 
+        // 2. Parent decoration under new anchor
+        transform.SetParent(anchorGO.transform, true);
+
+        // 3. Add OVRSpatialAnchor to new anchor
+        var anchor = anchorGO.AddComponent<OVRSpatialAnchor>();
+
+        // 4. Wait for localization
         float elapsed = 0f;
-        while (currentAnchor == null && elapsed < 1f)
+        while (!anchor.Localized && elapsed < AnchorTimeout)
         {
             await Task.Yield();
             elapsed += Time.deltaTime;
         }
 
-        if (currentAnchor == null)
+        if (!anchor.Localized)
         {
-            
+            Debug.LogWarning("Anchor failed to localize after release.");
+            Destroy(anchorGO);
             return;
         }
 
-        // Wait for localization
-        elapsed = 0f;
-        while (!currentAnchor.Localized && elapsed < AnchorTimeout)
+        // 5. Save anchor
+        bool success = await anchor.SaveAnchorAsync();
+        if (!success || anchor.Uuid == Guid.Empty)
         {
-            await Task.Yield();
-            elapsed += Time.deltaTime;
-        }
-
-        if (!currentAnchor.Localized)
-        {
-            
-            Destroy(currentAnchor);
-            currentAnchor = null;
+            Debug.LogWarning("Anchor failed to save.");
+            Destroy(anchorGO);
             return;
         }
 
-        bool success = await currentAnchor.SaveAnchorAsync();
-        if (success)
-        {
-            PlayerPrefs.SetString(savedKey, currentAnchor.Uuid.ToString());
-            PlayerPrefs.Save();
-            
-        }
-        else
-        {
-            
-        }
+        // 6. Add RoomDecorationInfo and save UUID
+        var info = anchorGO.AddComponent<RoomDecorationInfo>();
+        info.uuid = anchor.Uuid.ToString();
+        info.prefabName = prefabName;
+        info.linkedObject = anchorGO;
+
+        SpatialAnchorDecorator.SaveNewDecoration(info.uuid, info.prefabName);
+        RoomMenuManager.Instance.RegisterDecoration(info);
+
+        Debug.Log($"New anchor saved for {prefabName} at {anchorGO.transform.position}");
     }
+
+    
 }

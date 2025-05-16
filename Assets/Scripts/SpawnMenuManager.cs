@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Oculus.Interaction;
 
 public class SpawnMenuManager : MonoBehaviour
 {
@@ -31,7 +32,6 @@ public class SpawnMenuManager : MonoBehaviour
 
     void Start()
     {
-
         RoomMenuManager.Instance.OnDecorationRemovedByUUID += HandleDecorationRemoved;
         spawnCounts.Clear();
         itemButtons.Clear();
@@ -99,16 +99,11 @@ public class SpawnMenuManager : MonoBehaviour
 
             GameObject itemButtonObj = Instantiate(itemButtonPrefab, itemContainer);
 
-            // Set icon
-            var iconTransform = itemButtonObj.transform.Find("Icon");
-            if (iconTransform)
+            Image iconImage = itemButtonObj.GetComponent<Image>();
+            if (iconImage && item.icon)
             {
-                Image iconImage = iconTransform.GetComponent<Image>();
-                if (iconImage && item.icon)
-                {
-                    iconImage.sprite = item.icon;
-                    iconImage.enabled = true;
-                }
+                iconImage.sprite = item.icon;
+                iconImage.enabled = true;
             }
 
             TMP_Text buttonText = itemButtonObj.GetComponentInChildren<TMP_Text>();
@@ -119,8 +114,8 @@ public class SpawnMenuManager : MonoBehaviour
 
             if (!spawnCounts.ContainsKey(item))
             {
-                int activeInScene = RoomMenuManager.Instance.activeDecorations
-                    .FindAll(x => x.linkedObject != null && x.linkedObject.name.StartsWith(item.PrefabName)).Count;
+                int activeInScene = RoomMenuManager.Instance.GetActiveDecorations()
+                    .FindAll(x => x.prefabName == item.PrefabName).Count;
 
                 spawnCounts[item] = activeInScene;
             }
@@ -159,16 +154,10 @@ public class SpawnMenuManager : MonoBehaviour
             }
 
             spawnCounts[item]++;
-
             UpdateButtonState(item);
 
-            // Refresh the UI to reflect new spawn state
             if (currentCategory == item.category)
                 ShowItemsForCategory(currentCategory);
-        }
-        else
-        {
-            
         }
     }
 
@@ -203,7 +192,7 @@ public class SpawnMenuManager : MonoBehaviour
             itemGridHelper?.RefreshLayout();
     }
 
-    public void ShowRoomItems()
+    void ShowRoomItems()
     {
         currentCategory = "Room";
 
@@ -216,34 +205,40 @@ public class SpawnMenuManager : MonoBehaviour
             GameObject btn = Instantiate(roomItemButtonPrefab, itemContainer);
             btn.GetComponentInChildren<TMP_Text>().text = deco.prefabName;
 
-            // Enable drag-to-delete
+            // ✅ Set icon from spawnable item
+            var spawnable = allItems.Find(x => x.PrefabName == deco.prefabName);
+            if (spawnable != null)
+            {
+                Image iconImage = btn.GetComponent<Image>();
+                if (iconImage && spawnable.icon)
+                {
+                    iconImage.sprite = spawnable.icon;
+                    iconImage.enabled = true;
+                }
+            }
+
+            // Drag-to-delete
             var drag = btn.AddComponent<DraggableUIItem>();
             drag.linkedObject = deco.linkedObject;
             drag.uuid = deco.uuid;
 
-            // 🔒 Add a sub-button to disable interaction
+            // Lock button setup
             Transform lockBtn = btn.transform.Find("LockButton");
             if (lockBtn != null)
             {
                 Button lockButton = lockBtn.GetComponent<Button>();
                 TMP_Text lockText = lockBtn.GetComponentInChildren<TMP_Text>();
-
                 bool locked = false;
 
                 lockButton.onClick.AddListener(() =>
                 {
-                    locked = !locked;
-
-                    var grab = deco.linkedObject.gameObject.transform.GetChild(2);
+                    var grab = deco.linkedObject.transform.GetComponentInChildren<Grabbable>().transform.gameObject;
                     if (grab) grab.gameObject.SetActive(!locked);
-
-                    
-
+                    locked = !locked;
                     lockText.text = locked ? "L" : "U";
                 });
             }
         }
-
 
         itemGridHelper?.RefreshLayout();
     }
@@ -253,7 +248,7 @@ public class SpawnMenuManager : MonoBehaviour
         foreach (var item in allItems)
         {
             if (item.category == "Decoration" && RoomMenuManager.Instance.GetActiveDecorations()
-                .Find(x => x.uuid == uuid && x.linkedObject.name.StartsWith(item.PrefabName)) == null)
+                .Find(x => x.uuid == uuid && x.prefabName == item.PrefabName) == null)
             {
                 if (spawnCounts.ContainsKey(item) && item.maxSpawnCount > 0)
                 {
@@ -263,7 +258,6 @@ public class SpawnMenuManager : MonoBehaviour
             }
         }
 
-        // Refresh decorations view if it's the current category
         if (currentCategory == "Decoration")
             ShowItemsForCategory("Decoration");
     }

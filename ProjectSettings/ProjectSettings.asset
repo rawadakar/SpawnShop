@@ -830,7 +830,7 @@ PlayerSettings:
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
     Android: ISDK_OPENXR_HAND;VUPLEX_OCULUS_PROJECT_CONFIG;VUPLEX_OPENXR_META_QUEST
-    Standalone: ISDK_OPENXR_HAND
+    Standalone: ISDK_OPENXR_HAND;VUPLEX_OCULUS_PROJECT_CONFIG;VUPLEX_OPENXR_META_QUEST
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
