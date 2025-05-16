@@ -27,19 +27,19 @@ public class DeleteZoneHandler : MonoBehaviour, IDropHandler, IPointerEnterHandl
 
     public void OnDrop(PointerEventData eventData)
     {
-        Debug.Log("🟢 OnDrop triggered on DeleteZone");
+        
 
         var item = eventData.pointerDrag?.GetComponent<DraggableUIItem>();
         if (item != null)
         {
-            Debug.Log($"🗑 Deleting item: {item.uuid}");
+            
 
             RoomMenuManager.Instance.RemoveFromRoom(item.uuid);
             Destroy(item.gameObject);
         }
         else
         {
-            Debug.Log("⚠️ No DraggableUIItem found on drop.");
+            
         }
     }
 

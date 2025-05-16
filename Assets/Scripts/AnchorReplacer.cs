@@ -19,7 +19,7 @@ public class AnchorReplacer : MonoBehaviour
         interactable = GetComponentInChildren<DistanceGrabInteractable>();
         if (interactable == null)
         {
-            Debug.LogError($"❌ Missing DistanceGrabInteractable on {gameObject.name}");
+            
         }
     }
 
@@ -36,11 +36,11 @@ public class AnchorReplacer : MonoBehaviour
 
         if (currentAnchor != null)
         {
-            Debug.Log($"✅ Found existing spatial anchor for {gameObject.name}");
+            
         }
         else
         {
-            Debug.Log("ℹ️ No anchor found at startup — will create on release.");
+            
         }
     }
 
@@ -73,7 +73,7 @@ public class AnchorReplacer : MonoBehaviour
         {
             Destroy(currentAnchor);
             currentAnchor = null;
-            Debug.Log("🗑️ Removed old anchor.");
+            
         }
     }
 
@@ -92,7 +92,7 @@ public class AnchorReplacer : MonoBehaviour
 
         if (currentAnchor == null)
         {
-            Debug.LogError("❌ Failed to create new OVRSpatialAnchor.");
+            
             return;
         }
 
@@ -106,7 +106,7 @@ public class AnchorReplacer : MonoBehaviour
 
         if (!currentAnchor.Localized)
         {
-            Debug.LogWarning("⚠️ Anchor did not localize in time.");
+            
             Destroy(currentAnchor);
             currentAnchor = null;
             return;
@@ -117,11 +117,11 @@ public class AnchorReplacer : MonoBehaviour
         {
             PlayerPrefs.SetString(savedKey, currentAnchor.Uuid.ToString());
             PlayerPrefs.Save();
-            Debug.Log($"✅ Saved new anchor: {currentAnchor.Uuid}");
+            
         }
         else
         {
-            Debug.LogWarning("❌ Failed to save new anchor.");
+            
         }
     }
 }

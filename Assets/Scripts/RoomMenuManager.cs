@@ -51,12 +51,12 @@ public class RoomMenuManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning("Anchor could not be erased.");
+                    
                 }
             }
             else
             {
-                Debug.LogWarning("No anchor found on object.");
+                
             }
         }
     }

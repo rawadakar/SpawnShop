@@ -3,7 +3,20 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 3
-  tags: []
+  tags:
+  - SamplesInfoPanel
+  - QDSUISharedThemeColor
+  - QDSUIIcon
+  - QDSUIBorderlessButton
+  - QDSUIAccentColor
+  - QDSUISection
+  - QDSUISecondaryButton
+  - QDSUIToggleButton
+  - QDSUITextSecondaryColor
+  - Iterractor
+  - QDSUIToggleSwitch
+  - QDSUITooltip
+  - QDSUIToggleBorderlessButton
   layers:
   - Default
   - TransparentFX
@@ -36,7 +49,7 @@ TagManager:
   - 
   - 
   - 
-  - 
+  - OVROverlayCanvas Rendering
   m_SortingLayers:
   - name: Default
     uniqueID: 0

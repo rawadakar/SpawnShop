@@ -12,10 +12,16 @@ public class DraggableUIItem : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     private int originalSiblingIndex;
     private Canvas rootCanvas;
 
-    void Awake()
+    private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
-        canvasGroup = gameObject.AddComponent<CanvasGroup>();
+
+        canvasGroup = GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+        {
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        }
+
         rootCanvas = GetComponentInParent<Canvas>().rootCanvas;
     }
 

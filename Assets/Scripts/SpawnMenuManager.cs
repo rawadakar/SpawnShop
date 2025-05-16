@@ -10,6 +10,7 @@ public class SpawnMenuManager : MonoBehaviour
     public Transform itemContainer;
     public GameObject categoryButtonPrefab;
     public GameObject itemButtonPrefab;
+    public GameObject roomItemButtonPrefab;
 
     [Header("Grid Layout Helpers")]
     public LayoutRefreshHelper categoryGridHelper;
@@ -167,7 +168,7 @@ public class SpawnMenuManager : MonoBehaviour
         }
         else
         {
-            Debug.Log($"Spawn limit reached for: {item.itemName}");
+            
         }
     }
 
@@ -212,14 +213,37 @@ public class SpawnMenuManager : MonoBehaviour
 
         foreach (var deco in RoomMenuManager.Instance.GetActiveDecorations())
         {
-            var btn = Instantiate(itemButtonPrefab, itemContainer);
-
+            GameObject btn = Instantiate(roomItemButtonPrefab, itemContainer);
             btn.GetComponentInChildren<TMP_Text>().text = deco.prefabName;
 
+            // Enable drag-to-delete
             var drag = btn.AddComponent<DraggableUIItem>();
             drag.linkedObject = deco.linkedObject;
             drag.uuid = deco.uuid;
+
+            // 🔒 Add a sub-button to disable interaction
+            Transform lockBtn = btn.transform.Find("LockButton");
+            if (lockBtn != null)
+            {
+                Button lockButton = lockBtn.GetComponent<Button>();
+                TMP_Text lockText = lockBtn.GetComponentInChildren<TMP_Text>();
+
+                bool locked = false;
+
+                lockButton.onClick.AddListener(() =>
+                {
+                    locked = !locked;
+
+                    var grab = deco.linkedObject.gameObject.transform.GetChild(2);
+                    if (grab) grab.gameObject.SetActive(!locked);
+
+                    
+
+                    lockText.text = locked ? "L" : "U";
+                });
+            }
         }
+
 
         itemGridHelper?.RefreshLayout();
     }

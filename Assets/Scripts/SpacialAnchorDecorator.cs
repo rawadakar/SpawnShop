@@ -45,7 +45,7 @@ public class SpatialAnchorDecorator : MonoBehaviour
 
         if (!anchor.Localized)
         {
-            Debug.LogError("Anchor is not locatable after timeout.");
+            
             Destroy(instance);
             return;
         }
@@ -54,7 +54,7 @@ public class SpatialAnchorDecorator : MonoBehaviour
 
         if (success && anchor.Uuid != Guid.Empty)
         {
-            Debug.Log($"[Anchor] Saved UUID: {anchor.Uuid}");
+            
 
             var info = instance.AddComponent<RoomDecorationInfo>();
             info.uuid = anchor.Uuid.ToString();
@@ -67,7 +67,7 @@ public class SpatialAnchorDecorator : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Failed to save spatial anchor.");
+            
             Destroy(instance);
         }
     }
@@ -101,7 +101,7 @@ public class SpatialAnchorDecorator : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"Invalid UUID format: {deco.uuid}");
+                
             }
         }
 
@@ -112,14 +112,14 @@ public class SpatialAnchorDecorator : MonoBehaviour
         {
             if (!prefabLookup.TryGetValue(unbound.Uuid, out string prefabName))
             {
-                Debug.LogWarning($"Prefab name not found for anchor UUID: {unbound.Uuid}");
+                
                 continue;
             }
 
             GameObject prefab = allPrefabs.Find(p => p.name == prefabName);
             if (prefab == null)
             {
-                Debug.LogWarning($"Prefab '{prefabName}' not found in allPrefabs list.");
+                
                 continue;
             }
 
@@ -147,7 +147,7 @@ public class SpatialAnchorDecorator : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"Anchor for prefab '{prefabName}' failed to localize.");
+                
                 Destroy(instance);
             }
         }
@@ -163,7 +163,7 @@ public class SpatialAnchorDecorator : MonoBehaviour
         PlayerPrefs.SetString(SaveKey, JsonUtility.ToJson(wrapper));
         PlayerPrefs.Save();
 
-        Debug.Log($"Removed saved decoration with UUID: {uuid}");
+        
     }
 
     public static void SaveNewDecoration(string uuid, string prefabName)

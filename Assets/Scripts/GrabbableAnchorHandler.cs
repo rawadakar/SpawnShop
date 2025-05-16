@@ -41,7 +41,7 @@ public class GrabbableAnchorHandler : MonoBehaviour
         if (anchor != null)
         {
             anchor.enabled = false;
-            Debug.Log("Anchor temporarily disabled for grab.");
+            
         }
     }
 
@@ -68,7 +68,7 @@ public class GrabbableAnchorHandler : MonoBehaviour
 
         if (!anchor.Localized)
         {
-            Debug.LogWarning("Anchor failed to localize at new position.");
+            
             return;
         }
 
@@ -76,7 +76,7 @@ public class GrabbableAnchorHandler : MonoBehaviour
         bool saved = await anchor.SaveAnchorAsync();
         if (saved)
         {
-            Debug.Log($"✅ New anchor saved at new position: {anchor.Uuid}");
+            
 
             // Step 5: Update decoration info (optional)
             var info = GetComponent<RoomDecorationInfo>();
@@ -91,7 +91,7 @@ public class GrabbableAnchorHandler : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("❌ Failed to save anchor after move.");
+            
         }
     }
 
