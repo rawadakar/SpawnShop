@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: daf0ee1d095284b47bab11b21a5d66d2, type: 3}
+  m_Name: TV2
+  m_EditorClassIdentifier: 
+  itemName: TV2
+  prefab: {fileID: 4076156356714385899, guid: cf325be149fb0234e9145b74b6dd0619, type: 3}
+  icon: {fileID: 21300000, guid: b2e772f51fb6bf84b85ac5bc7c133e27, type: 3}
+  category: Decoration
+  isPaid: 0
+  maxSpawnCount: 1

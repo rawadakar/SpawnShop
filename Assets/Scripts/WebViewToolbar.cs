@@ -1,8 +1,9 @@
 using UnityEngine;
 using TMPro;
 using Vuplex.WebView;
+using System.Collections;
 
-public class CanvasWebViewToolbar : MonoBehaviour
+public class WebViewToolbar : MonoBehaviour
 {
     public CanvasWebViewPrefab webViewPrefab;
     public TMP_InputField urlInputField;
@@ -18,22 +19,40 @@ public class CanvasWebViewToolbar : MonoBehaviour
             yield return null;
 
         webViewPrefab.WebView.LoadUrl("https://www.google.com");
-        webViewPrefab.WebView.UrlChanged += OnUrlChanged;
+        webViewPrefab.WebView.LoadProgressChanged += OnLoadProgressChanged;
     }
 
     public void OnGoButtonClicked()
     {
-        string url = urlInputField.text;
+        string input = urlInputField.text.Trim();
 
-        if (!url.StartsWith("http://") && !url.StartsWith("https://"))
-            url = "https://" + url;
+        // If input looks like a domain or URL
+        if (input.StartsWith("http://") || input.StartsWith("https://") || input.Contains("."))
+        {
+            // If no http(s), add https
+            if (!input.StartsWith("http://") && !input.StartsWith("https://"))
+            {
+                input = "https://" + input;
+            }
 
-        webViewPrefab.WebView.LoadUrl(url);
+            webViewPrefab.WebView.LoadUrl(input);
+        }
+        else
+        {
+            // Treat input as search query
+            string searchQuery = System.Uri.EscapeDataString(input);
+            string googleSearchUrl = $"https://www.google.com/search?q={searchQuery}";
+            webViewPrefab.WebView.LoadUrl(googleSearchUrl);
+        }
     }
 
-    private void OnUrlChanged(object sender, UrlChangedEventArgs e)
+    private void OnLoadProgressChanged(object sender, ProgressChangedEventArgs e)
     {
-        urlInputField.text = e.Url;
+        if (e.Progress == 1f) // Fully loaded
+        {
+            urlInputField.text = webViewPrefab.WebView.Url;
+            
+        }
     }
 
     public void OnBackButtonClicked()
@@ -49,5 +68,19 @@ public class CanvasWebViewToolbar : MonoBehaviour
     public void OnRefreshButtonClicked()
     {
         webViewPrefab.WebView.Reload();
+    }
+
+    public void FocusInputField()
+    {
+        StartCoroutine(ForceCaretVisible());
+    }
+
+    private IEnumerator ForceCaretVisible()
+    {
+        yield return null; // wait one frame
+        urlInputField.ActivateInputField();
+        urlInputField.caretWidth = 2;
+        urlInputField.customCaretColor = true;
+        urlInputField.caretColor = Color.white;
     }
 }

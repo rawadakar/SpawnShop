@@ -232,7 +232,7 @@ public class SpawnMenuManager : MonoBehaviour
 
                 lockButton.onClick.AddListener(() =>
                 {
-                    var grab = deco.linkedObject.transform.GetComponentInChildren<Grabbable>().transform.gameObject;
+                    var grab = deco.linkedObject.transform.GetChild(0).transform.GetChild(0);
                     if (grab) grab.gameObject.SetActive(!locked);
                     locked = !locked;
                     lockText.text = locked ? "L" : "U";

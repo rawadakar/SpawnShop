@@ -2,11 +2,11 @@
 using System.Threading.Tasks;
 using UnityEngine;
 using Oculus.Interaction;
-
+using Meta.XR.MRUtilityKitSamples;
 [RequireComponent(typeof(Rigidbody))]
 public class AnchorReplacer : MonoBehaviour
 {
-    private DistanceGrabInteractable interactable;
+    private  EnvironmentPanelPlacement interactable;
     private const float AnchorTimeout = 5f;
     private bool wasBeingGrabbed = false;
 
@@ -14,14 +14,14 @@ public class AnchorReplacer : MonoBehaviour
 
     private void Awake()
     {
-        interactable = GetComponentInChildren<DistanceGrabInteractable>();
+        interactable = GetComponentInChildren<EnvironmentPanelPlacement>();
     }
 
     private void Update()
     {
         if (interactable == null) return;
 
-        if (interactable.State == InteractableState.Select)
+        if (interactable._isGrabbing == true)
         {
             if (!wasBeingGrabbed)
             {

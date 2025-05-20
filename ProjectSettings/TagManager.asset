@@ -17,6 +17,7 @@ TagManager:
   - QDSUIToggleSwitch
   - QDSUITooltip
   - QDSUIToggleBorderlessButton
+  - QDSUIBackplateGradient
   layers:
   - Default
   - TransparentFX
@@ -24,8 +25,8 @@ TagManager:
   - Overlay UI
   - Water
   - UI
-  - 
-  - 
+  - Decoration
+  - GlobalMesh
   - 
   - 
   - 
