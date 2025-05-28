@@ -11,10 +11,11 @@ public class AnchorReplacer : MonoBehaviour
     private bool wasBeingGrabbed = false;
 
     private string prefabName => gameObject.name;
-
+    public int currentID;
     private void Awake()
     {
         interactable = GetComponentInChildren<EnvironmentPanelPlacement>();
+        currentID = GetInstanceID();
     }
 
     private void Update()
@@ -47,13 +48,14 @@ public class AnchorReplacer : MonoBehaviour
         GameObject anchorGO = parent.gameObject;
 
         // ✅ Get info before destroying
-        RoomDecorationInfo info = anchorGO.GetComponent<RoomDecorationInfo>();
+        var info = anchorGO.GetComponent<RoomDecorationInfo>();
         if (info != null)
         {
             if (!string.IsNullOrEmpty(info.uuid))
             {
                 // ✅ Remove from saved JSON
                 SpatialAnchorDecorator.RemoveSavedDecoration(info.uuid);
+
             }
 
             // ✅ Optionally unregister from RoomMenuManager
@@ -108,12 +110,15 @@ public class AnchorReplacer : MonoBehaviour
 
         // 6. Add RoomDecorationInfo and save UUID
         var info = anchorGO.AddComponent<RoomDecorationInfo>();
+        info.ID = anchorGO.transform.GetChild(0).GetInstanceID();
         info.uuid = anchor.Uuid.ToString();
         info.prefabName = prefabName;
         info.linkedObject = anchorGO;
 
         SpatialAnchorDecorator.SaveNewDecoration(info.uuid, info.prefabName);
         RoomMenuManager.Instance.RegisterDecoration(info);
+
+        
 
         Debug.Log($"New anchor saved for {prefabName} at {anchorGO.transform.position}");
     }

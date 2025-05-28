@@ -71,9 +71,12 @@ public class SpatialAnchorDecorator : MonoBehaviour
             info.linkedObject = anchorGO;
             info.prefabName = prefab.name;
 
-            RoomMenuManager.Instance.RegisterDecoration(info);
 
+            RoomMenuManager.Instance.RegisterDecoration(info);
+            
+            
             SaveNewDecoration(info.uuid, info.prefabName);
+            
         }
         else
         {

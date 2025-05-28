@@ -37,8 +37,7 @@ public class EnvironmentPanelPlacement : MonoBehaviour
     [SerializeField] private Transform _panel;
     [SerializeField] private float _panelAspectRatio = 0.823f;
     [SerializeField] private GameObject _panelGlow;
-    [SerializeField] private LineRenderer _raycastVisualizationLine;
-    [SerializeField] private Transform _raycastVisualizationNormal;
+
 
     private readonly RollingAverage _rollingAverageFilter = new RollingAverage();
     private Vector3 _targetPose;
@@ -55,7 +54,7 @@ public class EnvironmentPanelPlacement : MonoBehaviour
 
     private void Start()
     {
-            
+
         ignoreLayer = 1 << LayerMask.NameToLayer("Decoration");
         layerMask = ~ignoreLayer;
         ignoreLayer2 = 1 << LayerMask.NameToLayer("GlobalMesh");
@@ -64,11 +63,11 @@ public class EnvironmentPanelPlacement : MonoBehaviour
         //_raycastManager = FindFirstObjectByType<EnvironmentRaycastManager>();
         _centerEyeAnchor = OVRManager.instance.GetComponent<OVRCameraRig>().centerEyeAnchor;
         _raycastAnchor = OVRManager.instance.GetComponent<OVRCameraRig>().rightControllerAnchor;
-            
+
 
         // Place the panel in front of the user
         var position = _centerEyeAnchor.position + _centerEyeAnchor.forward;
-        //var forward = Vector3.ProjectOnPlane(_centerEyeAnchor.position - position, Vector3.up).normalized;
+        var forward = Vector3.ProjectOnPlane(_centerEyeAnchor.position - position, Vector3.up).normalized;
         //_panel.position = position;
         _targetPose = _panel.position;
         _targetRotation = _panel.rotation;
@@ -76,7 +75,7 @@ public class EnvironmentPanelPlacement : MonoBehaviour
 
         // Create the OVRSpatialAnchor and make it a parent of the panel.
         // This will prevent the panel front drifting after headset lock/unlock.
-            
+
     }
 
     private void OnApplicationFocus(bool hasFocus)
@@ -89,9 +88,9 @@ public class EnvironmentPanelPlacement : MonoBehaviour
 
     private void Update()
     {
-           
 
-        VisualizeRaycast();
+
+
         if (_isGrabbing)
         {
             UpdateTargetPose();
@@ -101,7 +100,7 @@ public class EnvironmentPanelPlacement : MonoBehaviour
                 _isGrabbing = false;
                 _environmentPose = null;
 
-                    
+
             }
         }
         else
@@ -153,30 +152,30 @@ public class EnvironmentPanelPlacement : MonoBehaviour
                 _targetRotation = Quaternion.LookRotation(smoothedNormal, Vector3.up);
                 _distanceFromController = Vector3.Distance(_raycastAnchor.position, _panel.position);
 
-
+                
             }
             else
             {
                 var manualPlacementPosition2 = _raycastAnchor.position + _raycastAnchor.forward * _distanceFromController;
-                    
+
                 var forward = Vector3.ProjectOnPlane(_centerEyeAnchor.position - manualPlacementPosition2, Vector3.up).normalized;
-                    
-                    
+
+
 
                 _targetPose = manualPlacementPosition2;
                 _targetRotation = Quaternion.LookRotation(forward);
             }
-                
+
         }
-            
-            
+
+
     }
 
-       
+
 
     private void AnimatePanelPose()
     {
-            
+
 
         const float smoothTime = 0.13f;
         _panel.position = Vector3.SmoothDamp(_panel.position, _targetPose, ref _positionVelocity, smoothTime);
@@ -190,27 +189,9 @@ public class EnvironmentPanelPlacement : MonoBehaviour
         }
     }
 
-    private void VisualizeRaycast()
-    {
-        var ray = GetRaycastRay();
-        bool hasHit = Physics.Raycast(ray, out var hit);
 
-        bool hasNormal = true;
-        _raycastVisualizationLine.enabled = hasHit;
-        _raycastVisualizationNormal.gameObject.SetActive(hasHit && hasNormal);
-        if (hasHit)
-        {
-            _raycastVisualizationLine.SetPosition(0, ray.origin);
-            _raycastVisualizationLine.SetPosition(1, hit.point);
 
-            if (hasNormal)
-            {
-                _raycastVisualizationNormal.SetPositionAndRotation(hit.point, Quaternion.LookRotation(hit.normal));
-            }
-        }
-    }
 
-        
     private class RollingAverage
     {
         private List<Vector3> _normals;

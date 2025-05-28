@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using Oculus.Interaction;
 
 public class SpawnMenuManager : MonoBehaviour
 {
@@ -19,17 +18,20 @@ public class SpawnMenuManager : MonoBehaviour
 
     [Header("Item Database")]
     public List<SpawnableItem> allItems;
-
+    public string currentCategory = "";
     [Header("Anchor Decorator")]
     public SpatialAnchorDecorator anchorDecorator;
 
-    private Dictionary<string, List<SpawnableItem>> categorizedItems = new();
+    public Dictionary<string, List<SpawnableItem>> categorizedItems = new();
     private Dictionary<SpawnableItem, int> spawnCounts = new();
     private Dictionary<SpawnableItem, Button> itemButtons = new();
     private Dictionary<SpawnableItem, TMP_Text> itemLabels = new();
+    public static SpawnMenuManager Instance { get; set; }
 
-    private string currentCategory = "";
-
+    private void Awake()
+    {
+        Instance = this;
+    }
     void Start()
     {
         RoomMenuManager.Instance.OnDecorationRemovedByUUID += HandleDecorationRemoved;
@@ -80,11 +82,13 @@ public class SpawnMenuManager : MonoBehaviour
         roomBtn.GetComponentInChildren<TMP_Text>().text = "Room";
         roomBtn.GetComponent<Button>().onClick.AddListener(() =>
         {
+            currentCategory = "Decoration";
             ShowRoomItems();
+            
         });
     }
 
-    void ShowItemsForCategory(string category)
+    public void ShowItemsForCategory(string category)
     {
         currentCategory = category;
 
@@ -99,11 +103,16 @@ public class SpawnMenuManager : MonoBehaviour
 
             GameObject itemButtonObj = Instantiate(itemButtonPrefab, itemContainer);
 
-            Image iconImage = itemButtonObj.GetComponent<Image>();
-            if (iconImage && item.icon)
+            // ✅ Apply icon to child named "Icon"
+            Transform iconChild = itemButtonObj.transform.Find("Icon");
+            if (iconChild != null)
             {
-                iconImage.sprite = item.icon;
-                iconImage.enabled = true;
+                Image iconImage = iconChild.GetComponent<Image>();
+                if (iconImage && item.icon)
+                {
+                    iconImage.sprite = item.icon;
+                    iconImage.enabled = true;
+                }
             }
 
             TMP_Text buttonText = itemButtonObj.GetComponentInChildren<TMP_Text>();
@@ -173,7 +182,7 @@ public class SpawnMenuManager : MonoBehaviour
             ? $"{item.itemName} 🔒"
             : $"{item.itemName} ({countText})";
 
-        itemLabels[item].text = displayText;
+        //itemLabels[item].text = displayText;
 
         bool canSpawn = spawnsLeft != 0;
         itemButtons[item].interactable = !item.isPaid && canSpawn;
@@ -192,7 +201,7 @@ public class SpawnMenuManager : MonoBehaviour
             itemGridHelper?.RefreshLayout();
     }
 
-    void ShowRoomItems()
+    public void ShowRoomItems()
     {
         currentCategory = "Room";
 
@@ -203,39 +212,86 @@ public class SpawnMenuManager : MonoBehaviour
         foreach (var deco in RoomMenuManager.Instance.GetActiveDecorations())
         {
             GameObject btn = Instantiate(roomItemButtonPrefab, itemContainer);
-            btn.GetComponentInChildren<TMP_Text>().text = deco.prefabName;
+            btn.GetComponentInChildren<TMP_Text>().text = "";
 
-            // ✅ Set icon from spawnable item
+            // ✅ Set icon from spawnable item on child named "Icon"
             var spawnable = allItems.Find(x => x.PrefabName == deco.prefabName);
             if (spawnable != null)
             {
-                Image iconImage = btn.GetComponent<Image>();
-                if (iconImage && spawnable.icon)
+                Transform iconChild = btn.transform.Find("Icon");
+                if (iconChild != null)
                 {
-                    iconImage.sprite = spawnable.icon;
-                    iconImage.enabled = true;
+                    Image iconImage = iconChild.GetComponent<Image>();
+                    if (iconImage && spawnable.icon)
+                    {
+                        iconImage.sprite = spawnable.icon;
+                        iconImage.enabled = true;
+                    }
                 }
             }
 
-            // Drag-to-delete
             var drag = btn.AddComponent<DraggableUIItem>();
-            drag.linkedObject = deco.linkedObject;
-            drag.uuid = deco.uuid;
+            drag.uuid = deco.uuid; // ✅ Only store uuid
+            drag.ID = deco.ID;
 
-            // Lock button setup
             Transform lockBtn = btn.transform.Find("LockButton");
             if (lockBtn != null)
             {
                 Button lockButton = lockBtn.GetComponent<Button>();
-                TMP_Text lockText = lockBtn.GetComponentInChildren<TMP_Text>();
-                bool locked = false;
+                GameObject lockIcon = lockBtn.Find("LockButton").gameObject;
+                GameObject UnlockIcon = lockBtn.Find("UnlockButton").gameObject;
 
+                // 🔄 Load and apply initial lock state
+                bool locked = LoadLockState(drag.uuid);
+
+                var updatedDeco = RoomMenuManager.Instance.GetActiveDecorations()
+                    .Find(x => x.uuid == drag.uuid);
+
+                if (updatedDeco?.linkedObject != null && updatedDeco.linkedObject.transform.childCount > 0)
+                {
+                    Transform root = updatedDeco.linkedObject.transform;
+                    var grab = root.GetChild(0).Find("GrabCollider");
+                    var placer = root.GetChild(0).Find("Placer");
+
+                    if (grab != null)
+                        grab.gameObject.SetActive(!locked);
+                    if (placer != null)
+                        placer.gameObject.SetActive(!locked);
+                }
+
+                lockIcon.SetActive(locked);
+                UnlockIcon.SetActive(!locked);
+
+                // 🔘 Lock button logic
                 lockButton.onClick.AddListener(() =>
                 {
-                    var grab = deco.linkedObject.transform.GetChild(0).transform.GetChild(0);
-                    if (grab) grab.gameObject.SetActive(!locked);
-                    locked = !locked;
-                    lockText.text = locked ? "L" : "U";
+                    var refreshedDeco = RoomMenuManager.Instance.GetActiveDecorations()
+                        .Find(x => x.ID == drag.ID);
+
+                    if (refreshedDeco?.ID == null)
+                    {
+                        Debug.Log("No Object Found");
+                        return;
+                    }
+
+                    Transform root = refreshedDeco.linkedObject.transform;
+                    var grab = root.GetChild(0).Find("GrabCollider");
+                    var placer = root.GetChild(0).Find("Placer");
+
+                    if (grab != null && placer != null)
+                    {
+                        bool currentLockState = LoadLockState(drag.uuid);
+                        bool newLockState = !currentLockState;
+
+                        grab.gameObject.SetActive(!newLockState);
+                        placer.gameObject.SetActive(!newLockState);
+                        Debug.Log("Placer " + (!newLockState).ToString());
+
+                        lockIcon.SetActive(newLockState);
+                        UnlockIcon.SetActive(!newLockState);
+
+                        SaveLockState(drag.uuid, newLockState);
+                    }
                 });
             }
         }
@@ -243,6 +299,20 @@ public class SpawnMenuManager : MonoBehaviour
         itemGridHelper?.RefreshLayout();
     }
 
+
+
+    void SaveLockState(string uuid, bool isLocked)
+    {
+        PlayerPrefs.SetInt($"LockState_{uuid}", isLocked ? 1 : 0);
+        PlayerPrefs.Save();
+    }
+
+    bool LoadLockState(string uuid)
+    {
+        return PlayerPrefs.GetInt($"LockState_{uuid}", 0) == 1;
+    }
+
+    
     void HandleDecorationRemoved(string uuid)
     {
         foreach (var item in allItems)

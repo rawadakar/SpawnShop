@@ -83,9 +83,10 @@ public class GrabbableAnchorHandler : MonoBehaviour
             if (info != null)
             {
                 info.uuid = anchor.Uuid.ToString();
-
+                SpatialAnchorDecorator.RemoveSavedDecoration(info.uuid);
+                RoomMenuManager.Instance.RegisterDecoration(info);
                 // Optional: update PlayerPrefs if your system tracks saved UUIDs
-                SpatialAnchorDecorator.RemoveSavedDecoration(info.uuid); // remove old entry
+                 // remove old entry
                 SpatialAnchorDecorator.SaveNewDecoration(info.uuid, info.prefabName); // re-save
             }
         }

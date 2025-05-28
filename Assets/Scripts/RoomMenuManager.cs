@@ -15,6 +15,9 @@ public class RoomMenuManager : MonoBehaviour
     public System.Action<string> OnDecorationRemovedByUUID;
     void Awake() => Instance = this;
 
+    
+
+    
     public void RegisterDecoration(RoomDecorationInfo info)
     {
         // Avoid duplicate entries by UUID or reference

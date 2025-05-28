@@ -5,6 +5,7 @@ public class DraggableUIItem : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 {
     public GameObject linkedObject;
     public string uuid;
+    public int ID;
 
     private RectTransform rectTransform;
     private CanvasGroup canvasGroup;
@@ -39,7 +40,14 @@ public class DraggableUIItem : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
     public void OnDrag(PointerEventData eventData)
     {
-        rectTransform.anchoredPosition += eventData.delta;
+        if (RectTransformUtility.ScreenPointToWorldPointInRectangle(
+            rectTransform.parent as RectTransform,
+            eventData.position,
+            eventData.pressEventCamera,
+            out Vector3 globalMousePos))
+        {
+            rectTransform.position = globalMousePos;
+        }
     }
 
     public void OnEndDrag(PointerEventData eventData)
