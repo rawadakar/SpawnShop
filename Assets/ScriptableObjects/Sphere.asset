@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Sphere
   m_EditorClassIdentifier: 
   itemName: Sphere
-  prefab: {fileID: 2539366722594893687, guid: 29ecf34b21ce10f419c6ae2b0c20303e, type: 3}
-  icon: {fileID: 21300000, guid: 4352613fc5668a847a57ae11dc579f70, type: 3}
-  category: Primitives
+  prefab: {fileID: 5332769115299497909, guid: ff8ecf03a0fe84d448324de9988a301e, type: 3}
+  icon: {fileID: 21300000, guid: 2f1164386bf0a0a4385c62c9efca1941, type: 3}
+  category: Shapes
+  subCategory: Physics
   isPaid: 0
-  maxSpawnCount: 5
-  currentSpawnCount: 5
+  maxSpawnCount: 10

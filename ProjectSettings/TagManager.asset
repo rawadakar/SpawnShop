@@ -27,8 +27,8 @@ TagManager:
   - UI
   - Decoration
   - GlobalMesh
-  - 
-  - 
+  - ClippingVolume
+  - StencilButton1
   - 
   - 
   - 

@@ -94,7 +94,7 @@ public class AnchorReplacer : MonoBehaviour
 
         if (!anchor.Localized)
         {
-            Debug.LogWarning("Anchor failed to localize after release.");
+            
             Destroy(anchorGO);
             return;
         }
@@ -103,7 +103,7 @@ public class AnchorReplacer : MonoBehaviour
         bool success = await anchor.SaveAnchorAsync();
         if (!success || anchor.Uuid == Guid.Empty)
         {
-            Debug.LogWarning("Anchor failed to save.");
+            
             Destroy(anchorGO);
             return;
         }
@@ -120,7 +120,7 @@ public class AnchorReplacer : MonoBehaviour
 
         
 
-        Debug.Log($"New anchor saved for {prefabName} at {anchorGO.transform.position}");
+        
     }
 
     

@@ -9,7 +9,8 @@ public class SpawnableItem : ScriptableObject
     public Sprite icon;
 
     [Header("Classification")]
-    public string category; // e.g. "Primitive", "Vehicle", etc.
+    public string category;
+    public string subCategory;// e.g. "Primitive", "Vehicle", etc.
     public bool isPaid;
 
     [Header("Spawn Limits")]

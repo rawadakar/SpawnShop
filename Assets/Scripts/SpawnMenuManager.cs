@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using TMPro;
+using Unity.Android.Gradle;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,14 +12,14 @@ public class SpawnMenuManager : MonoBehaviour
     public GameObject categoryButtonPrefab;
     public GameObject itemButtonPrefab;
     public GameObject roomItemButtonPrefab;
-
+    public Button roomBtn;
     [Header("Grid Layout Helpers")]
     public LayoutRefreshHelper categoryGridHelper;
     public LayoutRefreshHelper itemGridHelper;
 
     [Header("Item Database")]
     public List<SpawnableItem> allItems;
-    public string currentCategory = "";
+    public string currentSubCategory = "";
     [Header("Anchor Decorator")]
     public SpatialAnchorDecorator anchorDecorator;
 
@@ -31,6 +32,12 @@ public class SpawnMenuManager : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+        roomBtn.GetComponent<Button>().onClick.AddListener(() =>
+        {
+            //currentCategory = "Decoration";
+            ShowRoomItems();
+
+        });
     }
     void Start()
     {
@@ -61,52 +68,70 @@ public class SpawnMenuManager : MonoBehaviour
             if (item == null || item.prefab == null || item.prefab.name.EndsWith("(Clone)"))
                 continue;
 
-            if (!categorizedItems.ContainsKey(item.category))
-                categorizedItems[item.category] = new List<SpawnableItem>();
+            if (!categorizedItems.ContainsKey(item.subCategory))
+                categorizedItems[item.subCategory] = new List<SpawnableItem>();
 
-            categorizedItems[item.category].Add(item);
+            categorizedItems[item.subCategory].Add(item);
         }
 
-        foreach (var category in categorizedItems.Keys)
+        foreach (var subCategory in categorizedItems.Keys)
         {
             GameObject categoryButton = Instantiate(categoryButtonPrefab, categoryContainer);
-            categoryButton.GetComponentInChildren<TMP_Text>().text = category;
+            categoryButton.layer = LayerMask.NameToLayer("StencilButton1");
+            Transform[] element = categoryButton.GetComponentsInChildren<Transform>();
+            foreach (Transform t in element)
+            {
+                if (t != null)
+                {
+                    t.gameObject.layer = LayerMask.NameToLayer("StencilButton1");
+                }
+
+            }
+            
+            
+            categoryButton.GetComponentInChildren<TMP_Text>().text = subCategory;
 
             categoryButton.GetComponent<Button>().onClick.AddListener(() =>
             {
-                ShowItemsForCategory(category);
+                ShowItemsForCategory(subCategory);
             });
         }
 
-        GameObject roomBtn = Instantiate(categoryButtonPrefab, categoryContainer);
-        roomBtn.GetComponentInChildren<TMP_Text>().text = "Room";
-        roomBtn.GetComponent<Button>().onClick.AddListener(() =>
-        {
-            currentCategory = "Decoration";
-            ShowRoomItems();
-            
-        });
+        
+
     }
 
-    public void ShowItemsForCategory(string category)
+    public void ShowItemsForCategory(string subCategory)
     {
-        currentCategory = category;
+        currentSubCategory = subCategory;
 
         ClearChildren(itemContainer);
         itemButtons.Clear();
         itemLabels.Clear();
 
-        foreach (var item in categorizedItems[category])
+        foreach (var item in categorizedItems[subCategory])
         {
             if (item.prefab == null || item.prefab.name.EndsWith("(Clone)"))
                 continue;
 
             GameObject itemButtonObj = Instantiate(itemButtonPrefab, itemContainer);
+            itemButtonObj.layer = LayerMask.NameToLayer("StencilButton1");
+            Transform[] element = itemButtonObj.GetComponentsInChildren<Transform>();
+            foreach (Transform t in element)
+            {
+                if (t != null)
+                {
+                    t.gameObject.layer = LayerMask.NameToLayer("StencilButton1");
+                }
 
+            }
+
+            
             // ✅ Apply icon to child named "Icon"
-            Transform iconChild = itemButtonObj.transform.Find("Icon");
+            Transform iconChild = itemButtonObj.transform.GetChild(0).transform.Find("Icon");
             if (iconChild != null)
             {
+                Debug.Log("Image Found");
                 Image iconImage = iconChild.GetComponent<Image>();
                 if (iconImage && item.icon)
                 {
@@ -159,14 +184,15 @@ public class SpawnMenuManager : MonoBehaviour
             }
             else
             {
-                Instantiate(item.prefab, spawnPos, spawnRot);
+               Instantiate(item.prefab, spawnPos, spawnRot);
+                
             }
 
             spawnCounts[item]++;
             UpdateButtonState(item);
 
-            if (currentCategory == item.category)
-                ShowItemsForCategory(currentCategory);
+            if (currentSubCategory == item.subCategory)
+                ShowItemsForCategory(currentSubCategory);
         }
     }
 
@@ -186,6 +212,15 @@ public class SpawnMenuManager : MonoBehaviour
 
         bool canSpawn = spawnsLeft != 0;
         itemButtons[item].interactable = !item.isPaid && canSpawn;
+        if (!canSpawn)
+        {
+            Image img = itemButtons[item].transform.Find("Icon").GetComponent<Image>();
+            if (img != null)
+            {
+                img.color = new Color(1, 1, 1, 0.4f);
+            }
+        }
+        
     }
 
     void ClearChildren(Transform container)
@@ -203,7 +238,7 @@ public class SpawnMenuManager : MonoBehaviour
 
     public void ShowRoomItems()
     {
-        currentCategory = "Room";
+        currentSubCategory = "Room";
 
         ClearChildren(itemContainer);
         itemButtons.Clear();
@@ -212,15 +247,23 @@ public class SpawnMenuManager : MonoBehaviour
         foreach (var deco in RoomMenuManager.Instance.GetActiveDecorations())
         {
             GameObject btn = Instantiate(roomItemButtonPrefab, itemContainer);
-            btn.GetComponentInChildren<TMP_Text>().text = "";
-
+            btn.layer = LayerMask.NameToLayer("StencilButton1");
+            Transform[] element = btn.GetComponentsInChildren<Transform>();
+            foreach (Transform child in element)
+            {
+                child.gameObject.layer = LayerMask.NameToLayer("StencilButton1");
+            }
+            //btn.GetComponentInChildren<TMP_Text>().text = "";
+            Debug.Log(deco.transform.GetChild(0).name);
             // ✅ Set icon from spawnable item on child named "Icon"
-            var spawnable = allItems.Find(x => x.PrefabName == deco.prefabName);
+            var spawnable = allItems.Find(x => x.itemName == deco.transform.GetChild(0).name);
             if (spawnable != null)
             {
-                Transform iconChild = btn.transform.Find("Icon");
+                Debug.Log("spawnable Found");
+                Transform iconChild = btn.transform.GetChild(0).transform.Find("Icon");
                 if (iconChild != null)
                 {
+                    Debug.Log("Image Found");
                     Image iconImage = iconChild.GetComponent<Image>();
                     if (iconImage && spawnable.icon)
                     {
@@ -228,6 +271,10 @@ public class SpawnMenuManager : MonoBehaviour
                         iconImage.enabled = true;
                     }
                 }
+            }
+            else
+            {
+                Debug.Log("spawnable NOT Found");
             }
 
             var drag = btn.AddComponent<DraggableUIItem>();
@@ -270,7 +317,7 @@ public class SpawnMenuManager : MonoBehaviour
 
                     if (refreshedDeco?.ID == null)
                     {
-                        Debug.Log("No Object Found");
+                        
                         return;
                     }
 
@@ -285,7 +332,7 @@ public class SpawnMenuManager : MonoBehaviour
 
                         grab.gameObject.SetActive(!newLockState);
                         placer.gameObject.SetActive(!newLockState);
-                        Debug.Log("Placer " + (!newLockState).ToString());
+                        
 
                         lockIcon.SetActive(newLockState);
                         UnlockIcon.SetActive(!newLockState);
@@ -328,7 +375,7 @@ public class SpawnMenuManager : MonoBehaviour
             }
         }
 
-        if (currentCategory == "Decoration")
+        if (currentSubCategory == "Decoration")
             ShowItemsForCategory("Decoration");
     }
 }

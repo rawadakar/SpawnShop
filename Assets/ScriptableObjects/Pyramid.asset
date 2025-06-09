@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: daf0ee1d095284b47bab11b21a5d66d2, type: 3}
+  m_Name: Pyramid
+  m_EditorClassIdentifier: 
+  itemName: Pyramid
+  prefab: {fileID: 246619525562286777, guid: 6cf0a63903fefaf47ac9ff65ee053491, type: 3}
+  icon: {fileID: 21300000, guid: 02d8211a79a98be4aa1498cdeaa231ff, type: 3}
+  category: Shapes
+  subCategory: Physics
+  isPaid: 0
+  maxSpawnCount: 10
